@@ -78,7 +78,7 @@ class Plotter(object):
         self.queue = queue
         #  set up the graph and axes and do a bunch of formatting
         self.fig = plt.figure()
-        self.axes = plt.axes(xlim=(0, self.maxLength), ylim=(0,1023))
+        self.axes = plt.axes(xlim=(0, self.maxLength), ylim=(0,5))
         self.axes.yaxis.tick_right()
         self.axes.yaxis.set_major_locator(tkr.LinearLocator(numticks=9))
         self.axes.yaxis.set_minor_locator(tkr.AutoMinorLocator(n=5))
@@ -99,8 +99,8 @@ class Plotter(object):
         datalist = self.queue.get()
         try:
             # Append the new data to the list and remove the oldest value
-            self.ampdata = self.ampdata[1:] + [datalist[0]]
-            self.sinedata = self.sinedata[1:] + [datalist[1]]
+            self.ampdata = self.ampdata[1:] + [datalist[0]*5/1024]
+            self.sinedata = self.sinedata[1:] + [datalist[1]]*5/1024
             # Plot the new data
             self.text.set_text(str(datalist))
             self.a0.set_data(range(self.maxLength), self.ampdata)
@@ -126,7 +126,7 @@ def beginparser():
     """
     parser = argparse.ArgumentParser(description="SerialPlotter")
     parser.add_argument('--port', dest='port', required=True)
-    parser.add_argument('--baud', dest='baudrate', required=True, type=int)
+    parser.add_argument('--baud', dest='baudrate', default=9600, type=int)
     parser.add_argument('--len', dest='maxLength', default=100, type=int)
     args = parser.parse_args()
     return args
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     # Initialise SerialReader and set it to kill program if only it is left (when main thread dies)
     reader = SerialReader(args.port, args.baudrate, dataqueue)
     reader.daemon = True
-    print("Starting Thread....")
+    print("Starting Thread... .")
     reader.start()
 
     # Initialise plotter class
