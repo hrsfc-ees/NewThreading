@@ -78,37 +78,45 @@ class Plotter(object):
         self.queue = queue
         #  set up the graph and axes and do a bunch of formatting
         self.fig = plt.figure()
-        self.axes = plt.axes(xlim=(0, self.maxLength), ylim=(0,5))
+        self.axes = plt.axes(xlim=(0, self.maxLength), ylim=(0,3.3))
         self.axes.yaxis.tick_right()
         self.axes.yaxis.set_major_locator(tkr.LinearLocator(numticks=9))
         self.axes.yaxis.set_minor_locator(tkr.AutoMinorLocator(n=5))
-        self.ampdata = [0.0] * self.maxLength
-        self.sinedata = [0.0] * self.maxLength
-        self.a0, = self.axes.plot(range(self.maxLength), self.ampdata)
-        self.a1, = self.axes.plot(range(self.maxLength), self.sinedata)
+        self.pin20 = [0.0] * self.maxLength
+        self.pin19 = [0.0] * self.maxLength
+        self.pin18 = [0.0] * self.maxLength
+        self.pin17 = [0.0] * self.maxLength
+        self.a0, = self.axes.plot(range(self.maxLength), self.pin20)
+        self.a1, = self.axes.plot(range(self.maxLength), self.pin19)
+        self.a2, = self.axes.plot(range(self.maxLength), self.pin18)
+        self.a3, = self.axes.plot(range(self.maxLength), self.pin17)
         self.cid = self.fig.canvas.mpl_connect('key_press_event', self.OnSpace)
         self.text = plt.text(9.2,0.7, 'Hello What happening')
 
     # This function updates the graph every time FuncAnimation calls it
     def update(self, i):
         if self.Paused:
-            return self.a0, self.a1, self.text
+            return self.a0, self.a1, self.a2, self.a3, self.text
         # Monitor Queue size
         print(self.queue.qsize())
         # Get (and remove) first item in queue
         datalist = self.queue.get()
         try:
             # Append the new data to the list and remove the oldest value
-            self.ampdata = self.ampdata[1:] + [datalist[0]*5/1024]
-            self.sinedata = self.sinedata[1:] + [datalist[1]]*5/1024
+            self.pin20 = self.pin20[1:] + [datalist[0]*3.3]
+            self.pin19 = self.pin19[1:] + [datalist[1]*3.3]
+            self.pin18 = self.pin18[1:] + [datalist[2]*3.3]
+            self.pin17 = self.pin17[1:] + [datalist[3]*3.3]
             # Plot the new data
             self.text.set_text(str(datalist))
-            self.a0.set_data(range(self.maxLength), self.ampdata)
-            self.a1.set_data(range(self.maxLength), self.sinedata)
+            self.a0.set_data(range(self.maxLength), self.pin20)
+            self.a1.set_data(range(self.maxLength), self.pin19)
+            self.a2.set_data(range(self.maxLength), self.pin18)
+            self.a3.set_data(range(self.maxLength), self.pin17)
         except Exception as e:
             print(str(e))
         # return the portions of the graph that have changed in order to blit
-        return self.a0, self.a1, self.text
+        return self.a0, self.a1, self.a2, self.a3, self.text
 
     # Function that is called on spacebar pressed
     def OnSpace(self, event):
@@ -125,7 +133,7 @@ def beginparser():
     Return type dictionary of arguments
     """
     parser = argparse.ArgumentParser(description="SerialPlotter")
-    parser.add_argument('--port', dest='port', required=True)
+    parser.add_argument('--port', dest='port', default='COM6')
     parser.add_argument('--baud', dest='baudrate', default=9600, type=int)
     parser.add_argument('--len', dest='maxLength', default=100, type=int)
     args = parser.parse_args()
